@@ -27,9 +27,18 @@ class ChatConsumer(AsyncWebsocketConsumer):
         text_data_json = json.loads(text_data)
         message = text_data_json["message"]
 
+        # Create a struct of 1 Mb
+        struct = bytearray(1024 * 1024)
+
+
         # Send message to room group
         await self.channel_layer.group_send(
             self.room_group_name, {"type": "chat.message", "message": message}
+        )
+
+        # Send 1 Mb of data
+        await self.channel_layer.group_send(
+            self.room_group_name, {"type": "chat.binary", "message": struct}
         )
 
     # Receive message from room group
@@ -38,3 +47,9 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
         # Send message to WebSocket
         await self.send(text_data=json.dumps({"message": message}))
+
+    async def chat_binary(self, event):
+        message = event["message"]
+
+        # Send message to WebSocket
+        await self.send(bytes_data=message)
