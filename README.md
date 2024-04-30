@@ -32,4 +32,16 @@ Check out the [tutorial](https://testdriven.io/blog/django-channels/).
    (venv)$ mprof run uvicorn core.asgi:application --port 8000 --lifespan off --host 0.0.0.0 --workers 1
    ```
 
+Or run with memray for the report
+
+```sh
+(venv)$ memray run  --force -o output.bin -m uvicorn core.asgi:application --port 8000 --lifespan off --host 0.0.0.0 --workers 1
+```
+
+Show results:
+
+```sh
+(venv)$ memray flamegraph output.bin --force
+```
+
 6. Navigate to [http://localhost:8000/chat/](http://localhost:8000/chat/). Reload the page many times or send messages..
