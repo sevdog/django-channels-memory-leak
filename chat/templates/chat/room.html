@@ -11,17 +11,48 @@
     <input id="chat-message-submit" type="button" value="Send" />
     {{ room_name|json_script:"room-name" }}
     <script>
+
+      function replicator(index) {
+        const promise =  new Promise((resolve, reject) => {
+          setTimeout(() => {
+            const mysocket = new WebSocket(socketLocxation);
+            mysocket.onopen = () => {
+              mysocket.send(
+                JSON.stringify({
+                  message: 'lorem ipsum dolor sit amen the porcacci madonn tuoi amici\n'.repeat(1 + (index % 10) * 23),
+                })
+              );
+
+              if (index % 4) {
+                console.log('end replicator', index)
+                mysocket.close();
+                resolve(index);
+              } else {
+                setTimeout(() => {
+                  console.log('end replicator', index)
+                  mysocket.close();
+                  resolve(index);
+                }, 20);
+              }
+            };
+          }, (index * 100) % 10 + 500);
+        });
+        return promise;
+      }
+
+
       const roomName = JSON.parse(
         document.getElementById("room-name").textContent
       );
 
-      const chatSocket = new WebSocket(
-        "ws://" + window.location.host + "/ws/chat/" + roomName + "/"
-      );
+      const socketLocxation = "ws://" + window.location.host + "/ws/chat/" + roomName + "/";
+      const chatSocket = new WebSocket(socketLocxation);
 
       chatSocket.onmessage = function (e) {
-        const data = JSON.parse(e.data);
-        document.querySelector("#chat-log").value += data.message + "\n";
+        try{
+          const data = JSON.parse(e.data);
+          document.querySelector("#chat-log").value += data.message + "\n";
+        } catch (e) {}
       };
 
       chatSocket.onclose = function (e) {
@@ -46,6 +77,16 @@
         );
         messageInputDom.value = "";
       };
+      setTimeout(() => {
+          const promises = []
+          for (let i = 0; i < 50; ++i) {
+            promises.push(replicator(i));
+          }
+          Promise.allSettled(promises).then(results => {
+            console.log(results);
+          })
+      }, 30000)
+
     </script>
   </body>
 </html>

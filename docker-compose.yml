@@ -1,0 +1,27 @@
+services:
+  redis:
+    image: library/redis:7.2.4-alpine
+    restart: unless-stopped
+    hostname: redis
+    healthcheck:
+      test: test $$(redis-cli -h '127.0.0.1' ping) = 'PONG'
+
+  uvicorn:
+    image: test-channels-leak
+    build: .
+    command: |
+      memray run --force -o output.bin -m uvicorn core.asgi:application --port 8000 --lifespan off --host 0.0.0.0 --workers 1
+    restart: unless-stopped
+    environment:
+      - PYTHONMALLOC=malloc
+      # try also python msgpack
+      - MSGPACK_PUREPYTHON=true
+    depends_on:
+      - redis
+    ports:
+      - 8000:8000
+    volumes:
+      - ./core:/core
+      - ./chat:/chat
+
+
